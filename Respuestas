@@ -1,0 +1,264 @@
+Parte 1: AWS y GCP (Infraestructura en la nube)
+Tareas practicas
+  1. Migración de base de datos 
+    r: Se puede exportar la totalidad de la base de datos en MySql y restaurarla en GCP. Tambien se puede hacer una herramienta dentro de GCP que se llama Database Migration Service (DMS)
+    Esta herramienta se activa sobre una instancia de Cloud SQL ya previamente creada y es solo seguir los pasos de la configuración para crear la tarea de migración y hacer el monitoreo.
+  
+    1. Hacer el export de toda la base de datos en MySql
+    2. Crear la instancia de Cloud Sql en GCP con la misma estructura. 
+    3. Cargar el upload de forma manual 
+    4. Hacer el seguiento de proceso. 
+    5. Revisar que haya terminado correctamente. 
+    6. Probar la conexión hacia la base de datos, bien sea por el aplicativo o por ide externos. 
+    7. Realizar pruebas unitarias de la integridad de los datos en cada tabla.
+    8. Realizar pruebas integrales por parte de los usuarios de la BD.
+  
+  Script de migración usando la función de dump en MySQL
+  tu_usuario=Usuario admin
+  tu_contraseña=Contraseña del admin
+  Con esto exportamos la bd completa, no solo los datos si no la dependencia y la extructura. 
+  mysqldump -u tu_usuario -p tu_contraseña ORDENES > ordenes_backup.sql
+  
+  Para importa los datos se debe crear primero varias cosas en GCP
+    1. Crear una instancia de Cloud SQL
+    2. Crear un bucket en Google Cloud Storage.
+    3. Subir el archivo de respaldo a Cloud Storage, al bucket creado.
+    4. Importar el archivo a Cloud SQL, dentro de Cloud SQL, seleccionar importar, buscar en Google Cloud Storage el archivo, configirar lo necesario e iniciar el proceso.
+  
+  Se debe considerar los permisos en GCP y el tamaño total de lo que se va a importar ya es posible que la nueva instancia debe ser ajusta o hacerla por partes, 
+  la codificación de la bd es importamente por lo general es UTF-8 
+
+  2. Optimización en la nube
+    GCP
+    Proporciona recomendaciones similares para un entorno con Compute Engine, Cloud Storage y Cloud SQL.
+    En Compute Engine
+    1. Se pueden escoger maquinas ya ofrecidas por la plataforma, que son buena en terminos de rendimeinto y estabilidad, o configurar una con las necesidaes especificas de RAM, CPU, etc.
+    2. Se puede configurar el escalamiento automatico, en funcion a la demanda al igual que se puede configurar una suspención automatica de la maquina. 
+    Storage
+    1. Se debe seleccionar el almacenamiento adecuado, las opciones seria Standard, Nearline y Coldline esto va a depender de la frecuencia con que se accede a los datos. 
+    2. Revisar si es necesario cargar toda la data de onpremise.
+    Cloud SQL
+    1. El tamaño de la instancia es critico para el tema de los costos 
+    2. BackUp y replicacion son necesario para restablcer el servicio de ser necesario pero va a costar dependiendo del tamaño. 
+    3. Se debe considerar usar el modulo de presupuesto de GCP para crear alertas de consumo. 
+
+Preguntas teóricas
+  Diferencias clave entre IAM en AWS y GCP:
+    1. IAM es el modulo de seguridad que incorporan las nubes. Desde aqui se puede otorgar o no accesos a los diferentes de componentes de la nube. 
+    2. AWS son las siglas para Amazon Web Services y es la nube de que ofrece Amazon. 
+    3. GCP son las siglas para Google cloud Platform y es el nube que ofrece Google. 
+    Diferencias:
+      1. AWS es mas antigua que GCP por lo que tiene una cantidad de funcionalidades mayores de gran complejidad lo que puede hacer dificil su usu.
+      2. GCP es mucho mas facil en cuanto a su uso para usuario final. 
+      3. AWS por ser mas antigua cuenta con un mayor numero de usuarios. 
+      4. GSP tiene mayor variabilidad de precios entre regiones aunque ambas son flexibles. 
+      5. Como tal AIM no es una plataforma si no un componente mas. 
+      6. GSP tiene un modelo complejo basado en usuarios y grupos, AWS tambien basa su modelo en usuarios y grupos pero es simple la signación de roles. 
+      7. La complejidad de GSP hace que el acceso sea mas grannular AWS no tiene una jerarquia tan granular. 
+      8. GPS cuenta un permisos sobre sus recursos y AWS con politicas de acceso. 
+  Alta disponibilidad:
+    1. Se puede hacer un diseño basado en cluster con Cloud Spanner (GCP) o Amazon Aurora (AWS)
+    2. Incorporando fileover y copias de seguridad. 
+
+Parte 2: Python (Desarrollo y scripting)
+
+Tareas prácticas
+1. Procesamiento de datos:
+  Script en Python para CSV:
+  import pandas as pd
+  df = pd.read_csv('C:\Users\intraron\Desktop\Prueba Data\ID,Nombre,Fecha,Costo.txt')
+
+  df.dropna(subset=['Nombre'], inplace=True)
+  df.dropna(subset=['Fecha'], inplace=True)
+  df.dropna(subset=['Costo'], inplace=True)
+  
+  df.drop_duplicates(subset='ID', keep='first', inplace=True)
+  
+  suma_columna = df['Costo'].sum()
+  promedio_columna = df['Costo'].mean()
+  
+  print("Suma de la columna:", suma_columna)
+  print("Promedio de la columna:", promedio_columna)
+  
+  df.to_csv('C:\Users\intraron\Desktop\Prueba Data\datos_limpios.csv', index=False)
+2. Automatización de tareas en la nube:
+  Puedo hacer un ejercicio teorico ya que no tengo acceso a la nube con una cuenta valida. Se debe habilitar un usuario en la IAM y crear una credencial para Python con su key
+  
+  import boto3
+  from google.cloud import storage
+  
+  def create_s3_bucket(bucket_name):
+      s3 = boto3.client('s3')
+      try:
+          response = s3.create_bucket(Bucket=bucket_name)
+          print(f"Bucket S3 creado: {bucket_name}")
+      except Exception as e:
+          print(f"Error al crear el bucket S3: {e}")
+  
+  def create_gcs_bucket(bucket_name):
+     #Para el almacenamiento
+      storage_client = storage.Client()
+      bucket = storage_client.bucket(bucket_name)
+      bucket.create(location="US")
+      print(f"Bucket de Cloud Storage creado: {bucket_name}")
+  
+  def upload_file(bucket_name, file_path, destination_blob_name):
+      # Para la carga del archivo 
+      print(f"Subiendo archivo {file_path} a {bucket_name}/{destination_blob_name}")
+
+  3. Preguntas teóricas
+    Optimización de memoria en Python
+    1. Se pueden usar generadores en vez de listas dentro de las iteración cuando se esta extrayendo datos. 
+    2. Utilizar el Chunksize de pandas para leer los archivos por partes. 
+    3. Forzar la limpienza de la memoria cuando se termine una tarea pesada. 
+    Interacción con APIs
+    1. Se debe crear una cuenta y habilitar los permisos en AIM 
+    2. Se debe descargar el key encriptado 
+    3. Se debe importar ese key en el script de python 
+    4. Se debe indicar cual es el recurso que se usara de la nube 
+    5. Una vez creado el cliente se puede usar. 
+    Voy a colocar un codigo de ejemplo que hice algunos meses atras 
+    # -*- coding: utf-8 -*-
+    import google
+    import pandas as pd
+    import platform
+    import os
+    from pathlib import Path
+    from google.cloud import bigquery
+    from datetime import datetime, date
+    from share import util as ut
+    from share import constants as cons
+    import csv
+    
+    # Configuración de la autenticación con BigQuery
+    scope = ['https://www.googleapis.com/auth/bigquery']
+    credencial_json = os.path.join(Path(__file__).parent.parent, 'Cloud_Credencials', 'ServiceAccount-rcanales.virtualesve', 'credentials.json')
+    credentials = google.oauth2.service_account.Credentials.from_service_account_file(credencial_json, scopes=scope)
+    
+    # Crear un cliente de BigQuery
+    client = bigquery.Client(credentials=credentials)
+    
+    # Definir la consulta SQL
+    print("Se realiza Consulta en BigQuery...")
+    query = """
+    WITH UltimaObservacion AS (
+                SELECT
+                    PRH.id_paciente,
+                    MAX(PRH.fecha_registro) AS ultima_fecha_registro_prh,
+                    MAX(PRM.fecha_registro) AS ultima_fecha_registro_prm
+                FROM
+                    `data-analytics-ven.FarmacoVigilancia.PRH` PRH
+                LEFT JOIN
+                    `data-analytics-ven.FarmacoVigilancia.PRM` PRM
+                ON 
+                    PRH.id_paciente = PRM.id_paciente
+                WHERE
+                    --DATE(PRH.fecha_registro) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+                    PRH.fecha_registro >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR)
+                GROUP BY
+                    PRH.id_paciente
+    )
+    select cedula,nombre_completo,telefono,direccion,email,fecha_registro,fecha_carga,fecha_nacimiento,
+           pais,sexo,nombre_tienda,nro_tienda,fecha_registro_prh,clasificacion_intervencion_prh,
+           clasificacion_prh_prh,descripcion_prh,intervencion_farmaceutica_prh,objetivo_intervencion_prh,
+           tipo_observacion_prm,descripcion_prm,objetivo_reintervencion_prm,intervencion_prm,
+           descripcion_re_intervencion_prm,prm_prm,objetivo_intervencion_prm,fecha_encuentro_prm 
+    from (
+    SELECT 
+        DISTINCT(PRH.id_observacion) AS id_observacion_prh,
+        --P.id AS id_paciente,
+        P.cedula,
+        replace(replace(P.nombre_completo, ';',''), ',','') as nombre_completo,
+        P.telefono,
+        replace(replace(P.direccion, ';',''), ',','') as direccion,
+        replace(replace(P.email, ';',''), ',','') as email,
+        P.fecha_registro,
+        P.fecha_carga,
+        P.fecha_nacimiento,
+        P.pais,
+        P.sexo,
+        P.nombre_tienda,
+        P.nro_tienda,
+        PRH.fecha_registro AS fecha_registro_prh,
+        replace(replace(PRH.clasificacion_intervencion, ';',''), ',','') AS clasificacion_intervencion_prh,
+        replace(replace(PRH.clasificacion_prh, ';',''), ',','') AS clasificacion_prh_prh,
+        replace(replace(PRH.descripcion, ';',''), ',','') AS descripcion_prh,
+        replace(replace(PRH.intervencion_farmaceutica, ';',''), ',','') AS intervencion_farmaceutica_prh,
+        replace(replace(PRH.objetivo_intervencion, ';',''), ',','') AS objetivo_intervencion_prh,
+        replace(replace(PRM.tipo_observacion, ';',''), ',','') AS tipo_observacion_prm,
+        replace(replace(PRM.descripcion, ';',''), ',','') AS descripcion_prm,
+        replace(replace(PRM.objetivo_reintervencion, ';',''), ',','') AS objetivo_reintervencion_prm,
+        replace(replace(PRM.intervencion, ';',''), ',','') AS intervencion_prm,
+        replace(replace(PRM.descripcion_re_intervencion, ';',''), ',','') AS descripcion_re_intervencion_prm,
+        replace(replace(PRM.prm, ';',''), ',','') AS prm_prm,
+        replace(replace(PRM.objetivo_intervencion, ';',''), ',','') AS objetivo_intervencion_prm,
+        PRM.fecha_encuentro AS fecha_encuentro_prm
+    FROM
+        UltimaObservacion UO
+    INNER JOIN 
+        `data-analytics-ven.FarmacoVigilancia.PRH` PRH 
+        ON UO.id_paciente = PRH.id_paciente AND UO.ultima_fecha_registro_prh = PRH.fecha_registro
+    LEFT JOIN 
+        `data-analytics-ven.FarmacoVigilancia.PRM` PRM 
+        ON UO.id_paciente = PRM.id_paciente AND UO.ultima_fecha_registro_prm = PRM.fecha_registro
+    INNER JOIN 
+        `data-analytics-ven.FarmacoVigilancia.Paciente` P 
+        ON PRH.id_paciente = P.id
+    ORDER BY 
+        PRH.fecha_registro DESC)"""
+    
+    # Ejecuta la consulta
+    query_job = client.query(query)
+    results = query_job.result()
+    
+    # Convertir los resultados a un DataFrame de pandas
+    df = results.to_dataframe()
+    
+    # Eliminar espacios en blanco alrededor de los textos en todas las columnas
+    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+    
+    # Reemplazar valores nulos, vacíos y solo con espacios por 'None'
+    df.fillna('None', inplace=True)
+    df.replace(r'^\s*$', 'None', regex=True, inplace=True)
+    
+    # Crear el nombre del archivo y la ruta donde se guardará
+    datte = date.today()
+    hora = datetime.now().hour
+    min = datetime.now().minute
+    seg = datetime.now().second
+    nombre_archivo = f'cts_vzla_{datte.day}{datte.month}{datte.year}{hora}{min}{seg}'
+    
+    ruta = 'output'
+    if platform.system() == 'Windows':
+        fichero_server_csv = os.path.join(os.path.normpath(os.path.dirname(__file__)), ruta, nombre_archivo + '.csv')
+    else:
+        fichero_server_csv = os.path.join(os.getenv('HOME'), nombre_archivo + '.csv')
+    
+    print("Se guarda el Archivo CSV...")
+    # Guardar el DataFrame en un archivo CSV con punto y coma como separador
+    df.to_csv(fichero_server_csv, index=False, sep=';', quoting=csv.QUOTE_MINIMAL, encoding='utf-8')
+    
+    # Enviar el archivo CSV al servidor SFTP
+    print('Enviando al SFTP...')
+    ut.sendSFTP(cons.ftp_servidor_dns,
+                cons.ftp_usuario1,
+                cons.ftp_clave1,
+                cons.ftd_raiz_cualtrics_cts_vzla_files,
+                fichero_server_csv,
+                nombre_archivo + '.csv')
+    
+    print('Archivo enviado con éxito al SFTP.')
+
+Parte 3: Migración de Bases de Datos Complejas
+No he realizado migraciones de este tipo. 
+Parte 4: Automatización de WhatsApp (Mensajes interactivos)
+Tareas prácticas
+  1. Integración con API de WhatsApp:
+    Script en Python:
+    1. Se debe crear uan estructura de datos que represente diferentes tipo de mensajes. 
+    2. Se debe hacer una lista a las diferentes respuesta que puede tener el usuario. 
+    3. Basado en las respuesta se debe describir la accion especifica.
+Hace unos seis meses se hizo una prueba piloto con WS business, si embargo el codigo no fuen entregado ya que no propero por costo. No parecia nada complejo salvo el tema de seguruidad.
+En todo caso para ser sincero yo no he hecho esta implementación ya que no fue asignada. 
+
+
